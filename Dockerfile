@@ -6,14 +6,17 @@ WORKDIR /build
 # 复制整个项目
 COPY . .
 
-# 定位 pom.xml 所在目录
-RUN if [ -f lanjii/pom.xml ]; then \
-    cd lanjii && \
-    mvn clean package -DskipTests -q && \
-    cd .. ; \
-else \
-    mvn clean package -DskipTests -q ; \
-fi
+# 列出目录结构进行调试
+RUN echo "=== Listing build directory ===" && ls -la
+
+# 检查是否存在 lanjii 目录，如果没有则列出所有文件
+RUN echo "=== Checking for pom.xml ===" && \
+    find . -name "pom.xml" -type f | head -10
+
+# 尝试构建 - 查找 pom.xml 并在其所在目录构建
+RUN mvn clean package -DskipTests -q -f lanjii/pom.xml || \
+    mvn clean package -DskipTests -q -f ./pom.xml || \
+    (echo "Cannot find pom.xml" && exit 1)
 
 # 运行阶段 - 使用轻量级 Java 镜像
 FROM eclipse-temurin:17-jre-alpine
