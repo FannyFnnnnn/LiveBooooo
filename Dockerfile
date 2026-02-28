@@ -7,17 +7,11 @@ WORKDIR /build
 RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 --recurse-submodules --remote-submodules https://github.com/FannyFnnnnn/LiveBooooo.git temp_repo && \
     cd temp_repo && \
-    git submodule status && \
-    mkdir -p /build/lanjii && \
-    cp -r . /build/lanjii/ && \
-    cd / && \
-    rm -rf temp_repo
+    git submodule status
 
-# 列出目录进行调试
-RUN echo "=== Checking lanjii contents ===" && \
-    ls -la lanjii/ && \
-    echo "=== All files in lanjii ===" && \
-    find lanjii -type f | head -20
+# 构建项目
+WORKDIR /build/temp_repo/lanjii
+RUN mvn clean package -DskipTests
 
 # 运行阶段 - 使用轻量级 Java 镜像
 FROM eclipse-temurin:17-jre-alpine
@@ -25,7 +19,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # 从构建阶段复制 JAR 文件
-COPY --from=builder /build/lanjii/lanjii-application/target/lanjii-application-*.jar app.jar
+COPY --from=builder /build/temp_repo/lanjii/lanjii-application/target/lanjii-application-*.jar app.jar
 
 # 暴露端口
 EXPOSE 8080
