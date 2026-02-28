@@ -1,4 +1,4 @@
-# 构建阶段 - 使用 Maven 和 Node.js
+# 构建阶段 - 使用 Maven 和 Node.js  
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
 WORKDIR /build
@@ -6,17 +6,29 @@ WORKDIR /build
 # 复制整个项目
 COPY . .
 
-# 列出目录结构进行调试
-RUN echo "=== Listing build directory ===" && ls -la
+# 初始化 git（如果 lanjii 是 submodule）
+RUN apt-get update && apt-get install -y git && \
+    git config --global user.email "build@railway.app" && \
+    git config --global user.name "Railway Build"
 
-# 检查是否存在 lanjii 目录，如果没有则列出所有文件
-RUN echo "=== Checking for pom.xml ===" && \
-    find . -name "pom.xml" -type f | head -10
+# 初始化 submodule（如果存在 .gitmodules）
+RUN if [ -f .gitmodules ]; then \
+    git init && \
+    git submodule update --init --recursive ; \
+    fi || true
 
-# 尝试构建 - 查找 pom.xml 并在其所在目录构建
-RUN mvn clean package -DskipTests -q -f lanjii/pom.xml || \
-    mvn clean package -DskipTests -q -f ./pom.xml || \
-    (echo "Cannot find pom.xml" && exit 1)
+# 列出目录进行调试
+RUN echo "=== Build directory contents ===" && ls -la && \
+    echo "=== Looking for pom.xml ===" && find . -name "pom.xml" -type f
+
+# 构建 - 使用 -f 参数指定 pom.xml 位置
+RUN if [ -f lanjii/pom.xml ]; then \
+    mvn clean package -DskipTests -q -f lanjii/pom.xml ; \
+elif [ -f pom.xml ]; then \
+    mvn clean package -DskipTests -q ; \
+else \
+    echo "ERROR: Cannot find pom.xml" && exit 1 ; \
+fi
 
 # 运行阶段 - 使用轻量级 Java 镜像
 FROM eclipse-temurin:17-jre-alpine
