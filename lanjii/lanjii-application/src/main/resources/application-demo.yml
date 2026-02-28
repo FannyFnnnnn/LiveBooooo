@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_BASE_URL}
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL}
+    # MCP 客户端
+    mcp:
+      client:
+        type: SYNC
+        request-timeout: 60s
+        initialized: true  # 启用MCP初始化
+        stdio:
+          connections:
+            tavily:
+              command: cmd.exe
+              args:
+                - /c
+                - npx
+                - -y
+                - tavily-mcp@latest
+              env:
+                TAVILY_API_KEY: ${TAVILY_API_KEY}
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/lanjii_v3?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
