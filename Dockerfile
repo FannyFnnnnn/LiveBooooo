@@ -3,10 +3,7 @@ FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
-# 复制顶级配置文件
-COPY .dockerignore .gitignore Dockerfile railway.json RAILWAY_DEPLOYMENT.md README.md ./
-
-# 从 GitHub 克隆 lanjii 仓库（处理 submodule 问题）
+# 从 GitHub 直接克隆（无需复制本地文件）
 RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 https://github.com/FannyFnnnnn/LiveBooooo.git temp_repo && \
     cp -r temp_repo/lanjii . && \
