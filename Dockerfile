@@ -21,8 +21,18 @@ WORKDIR /app
 # 从构建阶段复制 JAR 文件
 COPY --from=builder /build/temp_repo/lanjii/lanjii-application/target/lanjii-application-*.jar app.jar
 
+# 复制启动脚本
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # 暴露端口
 EXPOSE 8080
 
+# 环境变量默认值
+ENV DB_HOST=localhost \
+    DB_PORT=3306 \
+    DB_USERNAME=root \
+    DB_PASSWORD=root
+
 # 启动应用
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

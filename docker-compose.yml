@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: lanjii-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lanjii_v3
+      MYSQL_USER: lanjii
+      MYSQL_PASSWORD: lanjii123456
+      TZ: 'Asia/Shanghai'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./lanjii/docs/sql/lanjii-v3.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+    networks:
+      - lanjii-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lanjii-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=lanjii
+      - DB_PASSWORD=lanjii123456
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:https://api.openai.com/v1}
+      - OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+    ports:
+      - "8080:8080"
+    networks:
+      - lanjii-network
+
+volumes:
+  mysql_data:
+
+networks:
+  lanjii-network:
+    driver: bridge
