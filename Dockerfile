@@ -8,9 +8,9 @@ RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 --recurse-submodules --remote-submodules https://github.com/FannyFnnnnn/LiveBooooo.git temp_repo && \
     cd temp_repo && \
     git submodule status && \
-    ls -la lanjii/ && \
+    mkdir -p /build/lanjii && \
+    cp -r . /build/lanjii/ && \
     cd / && \
-    cp -r temp_repo/lanjii . && \
     rm -rf temp_repo
 
 # 列出目录进行调试
